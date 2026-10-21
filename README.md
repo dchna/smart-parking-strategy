@@ -1,64 +1,90 @@
-# Smart Parking Garage — Assignment 4 (Facade Pattern)
+# Smart Parking Garage
 
-A simple Java console application for parking entry, space reservation and payment. This is an individual-study starter project. Adapt it and understand each decision before submitting.
+Assignment 5 — Strategy Pattern
 
-## Run
+## About Project
 
-Requirements: Java 17+ and Maven.
+This is my Smart Parking Garage project in Java. I used Facade Pattern in Assignment 4. In Assignment 5 I added Strategy Pattern.
 
-```bash
-mvn clean verify
-mvn exec:java
-```
+Now my program can use different ways to calculate parking price and choose parking space.
 
-In IntelliJ IDEA: open the `pom.xml` as a Maven project and run `parking.Main`.
+## Strategy Families
 
-For a clean demonstration, stop the application and delete the `parking-data` directory. Data is stored in `.properties` files and remains after restarting the application.
+I have two strategy families.
 
-## Menu
+**1. Pricing Strategy**
+- HourlyPrice — normal price, 200 KZT per hour
+- DayPassPrice — price with daily limit
+- BusyHoursPrice — adds extra price when parking is busy
 
-1 = successful parking, 2 = B failure, 3 = C failure, 4 = inspect by ID, 5 = inspect all, 6 = manual compensation, 7 = resume an unfinished chain, 0 = exit. Use a NEW ID for each attempt. Capacity is 3 spaces. Parking costs 200 KZT/hour.
+**2. Parking Space Strategy**
+- FirstFreeSpot — selects first free place
+- ClosestSpot — selects closest place
+- CoveredSpot — prefers covered place
 
-## Three independent subsystems
+## Classes
 
-- A / Gate: `GateEntry` (state), `PlateValidator` (business rules), `GateRepository` (persistence), `GateService` (operations).
-- B / Space: `ParkingReservation` (state), `SpacePolicy` (business rules), `SpaceRepository` (persistence), `SpaceService` (operations).
-- C / Payment: `Payment` (state), `PaymentPolicy` (business rules), `PaymentRepository` (persistence), `PaymentService` (operations).
+| Class | Responsibility |
+|---|---|
+| PriceStrategy | Interface for calculating price |
+| HourlyPrice | Calculates hourly price |
+| DayPassPrice | Calculates price with daily limit |
+| BusyHoursPrice | Calculates price using parking occupancy |
+| PriceContext | Uses selected pricing strategy |
+| PriceSelector | Automatically selects pricing strategy |
+| SpotStrategy | Interface for selecting parking place |
+| FirstFreeSpot | Selects first available place |
+| ClosestSpot | Selects nearest available place |
+| CoveredSpot | Prefers covered parking place |
+| SpotContext | Uses selected space strategy |
+| SpotSelector | Automatically selects space strategy |
+| OccupancySource | Provides parking occupancy data |
+| FixedOccupancySource | Returns simulated occupancy data |
+| ParkingFacade | Controls parking process |
+| AdminFacade | Shows parking information |
+| EntryFacade | Handles entry with space reservation |
+| DiskStore | Saves data in files |
 
-Each subsystem can be used directly via its service, without calling either facade. The test `directSubsystems` demonstrates this.
+## Strategy vs State vs Template Method
 
-## Facades and persisted workflow
+I used Strategy because I need to change algorithms during program running.
 
-`ParkingFacade` runs A → B → C. `AdminFacade` inspects stored state and allows manual compensation. `ChainRepository` persists progress as PENDING_B, PENDING_C, COMPLETED or COMPENSATED.
+Strategy allows me to choose different pricing and parking space algorithms. I can change them using setStrategy().
 
-B failure after A: cancel the gate entry. C failure after A and B: release the space, THEN cancel the gate entry. Failure at the first step (invalid plate/hours) is rejected before committing anything. The demo menu can trigger both failures.
+State Pattern changes behavior depending on object state. Template Method uses inheritance with fixed steps.
 
-Persistence is per-entity rather than one global database transaction. The persisted chain status is updated after each step. The restart tests demonstrate resumption after A and after B. For a production system, stronger crash consistency, retries and idempotency would be needed between each entity write and its chain-status write.
+For my project Strategy is better because I want to choose algorithms without changing main logic.
 
-## Principle of Least Knowledge — before / after
+## Testing
 
-Before Facade, a client coordinates every subsystem:
+I used JUnit 5 for testing.
 
-```java
-GateEntry entry = gate.enter(id, plate);
-ParkingReservation reservation = space.reserve(id);
-Payment receipt = payment.charge(id, hours, false);
-```
+Tests check different strategies, selectors and switching strategies.
 
-The client must also catch errors, reverse reservations and cancel gate access. After Facade, the client only calls:
+I also used ParameterizedTest to check different pricing strategies.
 
-```java
-String result = facade.park(id, plate, hours, false, false);
-```
+## Refactoring History
 
-## Facade vs Adapter (reflection)
+First I used if/else for calculating parking prices. Then I changed it to Strategy Pattern.
 
-The problem is coordination, not incompatible interfaces. Gate, Space and Payment already expose usable operations. The client should not know which subsystem must run first or how to undo earlier work when later work fails. Facade gives the client a single parking operation while leaving each subsystem independently usable. Adapter would instead translate one interface into another; it would not automatically orchestrate the whole chain. `AdminFacade` provides a second, narrower view for inspection and manual compensation.
+**Before Refactoring:**
 
-## Tests and F.I.R.S.T.
+https://github.com/dchna/smart-parking-strategy/commit/9bc79e5
 
-`mvn clean verify` runs JUnit 5 tests and produces JaCoCo HTML at `target/site/jacoco/index.html`. JaCoCo checks a minimum **80% aggregate line coverage** (the assignment requires at least 80% for subsystems and facades; verify the per-package numbers in the report too). Tests use a separate temporary disk directory for every test (Fast, Independent, Repeatable), JUnit assertions (Self-validating), and the custom helper `parkingShouldBe(...)` (domain-specific test language). Commit tests together with each code change (Timely): Git history must be made by the student.
+**After Refactoring:**
 
-## Files for submission
+https://github.com/dchna/smart-parking-strategy/commit/2248ae3
 
-Source code, tests, this README, `docs/uml.puml` and an exported UML PNG, coverage report and GitHub repository link. The instructor may require live changes during defense.
+The same tests passed before and after refactoring.
+
+## How to Run
+
+Open the project in IntelliJ IDEA.
+
+Run `Main.java` to open the console menu.
+
+Run tests using Maven Lifecycle → test.
+
+## Conclusion
+
+In this assignment I learned how Strategy Pattern works. Now my parking system can change algorithms during running without changing the whole program.
