@@ -1,0 +1,50 @@
+@startuml
+skinparam classAttributeIconSize 0
+class Main
+class ParkingFacade
+class AdminFacade
+class ChainRepository
+class DiskStore
+package Gate {
+ class GateEntry
+ class PlateValidator
+ class GateRepository
+ class GateService
+}
+package Space {
+ class ParkingReservation
+ class SpacePolicy
+ class SpaceRepository
+ class SpaceService
+}
+package Payment {
+ class Payment
+ class PaymentPolicy
+ class PaymentRepository
+ class PaymentService
+}
+Main --> ParkingFacade
+Main --> AdminFacade
+ParkingFacade --> GateService
+ParkingFacade --> SpaceService
+ParkingFacade --> PaymentService
+ParkingFacade --> ChainRepository
+AdminFacade --> ParkingFacade
+AdminFacade --> GateService
+AdminFacade --> SpaceService
+AdminFacade --> PaymentService
+AdminFacade --> ChainRepository
+GateService --> GateRepository
+GateService --> PlateValidator
+GateRepository --> GateEntry
+GateRepository --> DiskStore
+SpaceService --> SpaceRepository
+SpaceService --> SpacePolicy
+SpaceRepository --> ParkingReservation
+SpaceRepository --> DiskStore
+PaymentService --> PaymentRepository
+PaymentService --> PaymentPolicy
+PaymentRepository --> Payment
+PaymentRepository --> DiskStore
+ChainRepository --> DiskStore
+@enduml
